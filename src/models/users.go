@@ -16,7 +16,7 @@ type NewUser struct {
 	Username    string `json:"username" xml:"username"`
 	Password    string `json:"password" xml:"password"`
 	DisplayName string `json:"displayName" xml:"displayName"`
-	Role        string `json:"roleId" xml:"roleId"`
+	Role        string `json:"role" xml:"role"`
 }
 
 type LoginUser struct {
@@ -29,20 +29,20 @@ type User struct {
 	Username    string `json:"username" xml:"username"`
 	Password    string `json:"password" xml:"password"`
 	DisplayName string `json:"displayName" xml:"displayName"`
-	Role        string `json:"roleId" xml:"roleId"`
+	Role        string `json:"role" xml:"role"`
 }
 
 type ReturnUser struct {
 	Uuid        string `json:"uuid" xml:"uuid"`
 	Username    string `json:"username" xml:"username"`
 	DisplayName string `json:"displayName" xml:"displayName"`
-	Role        string `json:"roleId" xml:"roleId"`
+	Role        string `json:"role" xml:"role"`
 }
 
 func CreateUser(db *src.DB, user NewUser) (uuid.UUID, error) {
 	uuid := uuid.New()
 	password := src.CreateHash([]byte(user.Password))
-	stmt, err := db.Prepare("INSERT INTO users (uuid, username, display_name, password, role_id) VALUES (?, ?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO users (uuid, username, display_name, password, role) VALUES (?, ?, ?, ?, ?)")
 	defer stmt.Close()
 
 	if err != nil {
