@@ -9,6 +9,10 @@ import (
 
 	"github.com/UnknownRori/lagra_server/src"
 	"github.com/charmbracelet/log"
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	en_translations "github.com/go-playground/validator/v10/translations/en"
 
 	"github.com/golang-jwt/jwt/v5"
 	echoJwt "github.com/labstack/echo-jwt/v4"
@@ -21,6 +25,11 @@ type Server struct {
 	Db        src.DB
 	ConfigJwt echoJwt.Config
 }
+
+var (
+	uni      *ut.UniversalTranslator
+	validate *validator.Validate
+)
 
 func CreateServer() Server {
 	db, err := src.CreateConn()
@@ -35,6 +44,12 @@ func CreateServer() Server {
 	e.Debug = os.Getenv("APP_DEBUG") == "true"
 	e.Use(LoggerMiddleware)
 	e.Use(middleware.Recover())
+	validate = validator.New()
+	en := en.New()
+	uni := ut.New(en, en)
+	trans, _ := uni.GetTranslator("en")
+	en_translations.RegisterDefaultTranslations(validate, trans)
+	e.Validator = &CustomValidator{validator: validate}
 
 	configJwt :=
 		echoJwt.Config{
