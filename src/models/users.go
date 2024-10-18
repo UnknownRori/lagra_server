@@ -9,47 +9,47 @@ import (
 )
 
 type FindUsersByUuid struct {
-	Uuid string `param:"uuid" query:"uuid" form:"uuid" json:"uuid" xml:"uuid"`
+	Uuid string `param:"uuid" query:"uuid" form:"uuid" json:"uuid" xml:"uuid" validate:"required"`
 }
 
 type NewUser struct {
-	Username    string `json:"username" xml:"username"`
-	Password    string `json:"password" xml:"password"`
-	DisplayName string `json:"displayName" xml:"displayName"`
-	Role        string `json:"role" xml:"role"`
+	Username string `json:"username" xml:"username" validate:"required"`
+	Password string `json:"password" xml:"password" validate:"required"`
+	Email    string `json:"email" xml:"email" validate:"required,email"`
+	Role     string `json:"role" xml:"role" validate:"required"`
 }
 
 type LoginUser struct {
-	Username string `json:"username" xml:"username"`
-	Password string `json:"password" xml:"password"`
+	Username string `json:"username" xml:"username" validate:"required"`
+	Password string `json:"password" xml:"password" validate:"required"`
 }
 
 type User struct {
-	Uuid        string `json:"uuid" xml:"uuid"`
-	Username    string `json:"username" xml:"username"`
-	Password    string `json:"password" xml:"password"`
-	DisplayName string `json:"displayName" xml:"displayName"`
-	Role        string `json:"role" xml:"role"`
+	Uuid     string `json:"uuid" xml:"uuid"`
+	Username string `json:"username" xml:"username"`
+	Password string `json:"password" xml:"password"`
+	Email    string `json:"email" xml:"email"`
+	Role     string `json:"role" xml:"role"`
 }
 
 type ReturnUser struct {
-	Uuid        string `json:"uuid" xml:"uuid"`
-	Username    string `json:"username" xml:"username"`
-	DisplayName string `json:"displayName" xml:"displayName"`
-	Role        string `json:"role" xml:"role"`
+	Uuid     string `json:"uuid" xml:"uuid"`
+	Username string `json:"username" xml:"username"`
+	Email    string `json:"email" xml:"email"`
+	Role     string `json:"role" xml:"role"`
 }
 
 func CreateUser(db *src.DB, user NewUser) (uuid.UUID, error) {
 	uuid := uuid.New()
 	password := src.CreateHash([]byte(user.Password))
-	stmt, err := db.Prepare("INSERT INTO users (uuid, username, display_name, password, role) VALUES (?, ?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO users (uuid, username, email, password, role) VALUES (?, ?, ?, ?, ?)")
 	defer stmt.Close()
 
 	if err != nil {
 		return uuid, err
 	}
 
-	_, err = stmt.Exec(uuid, user.Username, user.DisplayName, hex.EncodeToString(password), user.Role)
+	_, err = stmt.Exec(uuid, user.Username, user.Email, hex.EncodeToString(password), user.Role)
 
 	if err != nil {
 		return uuid, err
@@ -66,7 +66,7 @@ func FetchUserByUuid(db *src.DB, uuid string) (User, error) {
 	}
 
 	query := stmt.QueryRow(uuid)
-	err = query.Scan(&user.Uuid, &user.Username, &user.DisplayName, &user.Password, &user.Role)
+	err = query.Scan(&user.Uuid, &user.Username, &user.Email, &user.Password, &user.Role)
 	if err != nil {
 		return user, err
 	}
@@ -82,7 +82,7 @@ func FetchUserByUsername(db *src.DB, username string) (User, error) {
 	}
 
 	query := stmt.QueryRow(username)
-	err = query.Scan(&user.Uuid, &user.Username, &user.DisplayName, &user.Password, &user.Role)
+	err = query.Scan(&user.Uuid, &user.Username, &user.Email, &user.Password, &user.Role)
 	if err != nil {
 		return user, err
 	}
@@ -98,7 +98,7 @@ func FetchUserByUsernameOrUuid(db *src.DB, usernameOrUuid string) (User, error) 
 	}
 
 	query := stmt.QueryRow(usernameOrUuid, usernameOrUuid)
-	err = query.Scan(&user.Uuid, &user.Username, &user.DisplayName, &user.Password, &user.Role)
+	err = query.Scan(&user.Uuid, &user.Username, &user.Email, &user.Password, &user.Role)
 	if err != nil {
 		return user, err
 	}
