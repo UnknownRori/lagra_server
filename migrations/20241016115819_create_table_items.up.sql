@@ -3,6 +3,6 @@ CREATE TABLE items (
     name VARCHAR(255) UNIQUE NOT NULL,
     price INT NOT NULL,
 
-    category_id VARCHAR(255) UNIQUE NOT NULL,
+    category_id VARCHAR(255) NOT NULL,
     FOREIGN KEY(category_id) REFERENCES categories(uuid)
 );
