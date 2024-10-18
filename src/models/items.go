@@ -96,8 +96,6 @@ func FetchItems(db *src.DB) ([]Item, error) {
 			return items, err
 		}
 
-		print("Yo")
-		print(item.Category.Name)
 		items = append(items, item)
 
 	}
