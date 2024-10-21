@@ -41,33 +41,24 @@ func CreateItem(db *src.DB, item NewItem) (uuid.UUID, error) {
 	return uuid, nil
 }
 
-func FetchItemByUuid(db *src.DB, uuid string) ([]Item, error) {
-	var items []Item
+func FetchItemByUuid(db *src.DB, uuid string) (Item, error) {
+	var item Item
 	stmt, err := db.Prepare(`
 		SELECT items.uuid, items.name, items.price, categories.uuid as categories_uuid, categories.name 
 		FROM items 
 		INNER JOIN categories ON items.category_id = categories.uuid WHERE items.uuid = ? LIMIT 1`,
 	)
 	if err != nil {
-		return items, err
+		return item, err
 	}
 
 	query := stmt.QueryRow(uuid)
 
-	var item Item
-	var category Category
-	if err := query.Scan(&item.Uuid, &item.Name, &item.Price, &category.Uuid, &category.Name); err != nil {
-		return items, err
+	if err := query.Scan(&item.Uuid, &item.Name, &item.Price, &item.Category.Uuid, &item.Category.Name); err != nil {
+		return item, err
 	}
 
-	item.Category = category
-	items = append(items, item)
-
-	if err := query.Err(); err != nil {
-		return items, err
-	}
-
-	return items, err
+	return item, err
 }
 
 func FetchItems(db *src.DB) ([]Item, error) {

@@ -193,7 +193,7 @@ func RegisterRouter(server *Server) {
 		if err != nil {
 			log.Error(err.Error())
 
-			return c.JSON(http.StatusBadRequest, echo.Map{
+			return c.JSON(http.StatusInternalServerError, echo.Map{
 				"message": "Database error",
 				"status":  "fail",
 			})
@@ -257,7 +257,7 @@ func RegisterRouter(server *Server) {
 		if err != nil {
 			log.Error(err.Error())
 
-			return c.JSON(http.StatusBadRequest, echo.Map{
+			return c.JSON(http.StatusInternalServerError, echo.Map{
 				"message": "Database error",
 				"status":  "fail",
 			})
@@ -287,6 +287,72 @@ func RegisterRouter(server *Server) {
 		return c.JSON(http.StatusOK, echo.Map{
 			"data": echo.Map{
 				"carts": carts,
+			},
+			"status": "success",
+		})
+	})
+
+	authenticatedOnly.GET("transactions", func(c echo.Context) error {
+		cc := c.(*AuthenticatedContext)
+		user := cc.User
+		carts, err := models.FetchTransactions(&server.Db, user)
+
+		if err != nil {
+			log.Error(err.Error())
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"message": "Database offline",
+				"status":  "fail",
+			})
+		}
+
+		return c.JSON(http.StatusOK, echo.Map{
+			"data": echo.Map{
+				"transactions": carts,
+			},
+			"status": "success",
+		})
+	})
+
+	authenticatedOnly.POST("transactions", func(c echo.Context) error {
+		cc := c.(*AuthenticatedContext)
+		user := cc.User
+		var newTrans models.NewTransaction
+		err := c.Bind(&newTrans)
+
+		if err != nil {
+			log.Error(err.Error())
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Invalid request",
+				"status":  "fail",
+			})
+		}
+
+		uuid, err := models.CreateTransaction(&server.Db, newTrans, user)
+
+		if err != nil {
+			log.Error(err.Error())
+
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Items already exist or invalid payload",
+				"status":  "fail",
+			})
+		}
+
+		uuidString := uuid.String()
+		transaction, err := models.FetchTransactionByUuid(&server.Db, uuidString, user)
+
+		if err != nil {
+			log.Error(err.Error())
+
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"message": "Database error",
+				"status":  "fail",
+			})
+		}
+
+		return c.JSON(http.StatusOK, echo.Map{
+			"data": echo.Map{
+				"transaction": transaction,
 			},
 			"status": "success",
 		})
