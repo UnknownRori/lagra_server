@@ -188,9 +188,16 @@ func RegisterRouter(server *Server) {
 		}
 
 		uuidString := uuid.String()
-		log.Info(uuidString)
 		itemModel, err := models.FetchItemByUuid(&server.Db, uuidString)
-		log.Info(err)
+
+		if err != nil {
+			log.Error(err.Error())
+
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Database error",
+				"status":  "fail",
+			})
+		}
 
 		return c.JSON(http.StatusCreated, echo.Map{
 			"data": echo.Map{
@@ -214,6 +221,72 @@ func RegisterRouter(server *Server) {
 		return c.JSON(http.StatusOK, echo.Map{
 			"data": echo.Map{
 				"items": items,
+			},
+			"status": "success",
+		})
+	})
+
+	authenticatedOnly.POST("carts", func(c echo.Context) error {
+		cc := c.(*AuthenticatedContext)
+		user := cc.User
+		var cart models.NewCart
+		err := c.Bind(&cart)
+
+		if err != nil {
+			log.Error(err.Error())
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Required name, price, category",
+				"status":  "fail",
+			})
+		}
+
+		uuid, err := models.CreateCart(&server.Db, cart, user)
+
+		if err != nil {
+			log.Error(err.Error())
+
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Items already exist or invalid payload",
+				"status":  "fail",
+			})
+		}
+
+		uuidString := uuid.String()
+		carts, err := models.FetchCartsByUuid(&server.Db, uuidString, user)
+
+		if err != nil {
+			log.Error(err.Error())
+
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Database error",
+				"status":  "fail",
+			})
+		}
+
+		return c.JSON(http.StatusOK, echo.Map{
+			"data": echo.Map{
+				"carts": carts,
+			},
+			"status": "success",
+		})
+	})
+
+	authenticatedOnly.GET("carts", func(c echo.Context) error {
+		cc := c.(*AuthenticatedContext)
+		user := cc.User
+		carts, err := models.FetchCarts(&server.Db, user)
+
+		if err != nil {
+			log.Error(err.Error())
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"message": "Database offline",
+				"status":  "fail",
+			})
+		}
+
+		return c.JSON(http.StatusOK, echo.Map{
+			"data": echo.Map{
+				"carts": carts,
 			},
 			"status": "success",
 		})

@@ -53,9 +53,6 @@ func FetchItemByUuid(db *src.DB, uuid string) ([]Item, error) {
 	}
 
 	query := stmt.QueryRow(uuid)
-	if err != nil {
-		return items, err
-	}
 
 	var item Item
 	var category Category

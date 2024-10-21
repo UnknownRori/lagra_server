@@ -39,6 +39,11 @@ type ReturnUser struct {
 	Role     string `json:"role" xml:"role"`
 }
 
+type DisplayUser struct {
+	Uuid     string `json:"uuid" xml:"uuid"`
+	Username string `json:"username" xml:"username"`
+}
+
 func CreateUser(db *src.DB, user NewUser) (uuid.UUID, error) {
 	uuid := uuid.New()
 	password := src.CreateHash([]byte(user.Password))

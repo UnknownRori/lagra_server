@@ -7,9 +7,10 @@ import (
 )
 
 type Cart struct {
-	Uuid  string `param:"uuid" query:"uuid" form:"uuid" json:"uuid" xml:"uuid"`
-	Total int32  `json:"name" xml:"name"`
-	Item
+	Uuid        string `param:"uuid" query:"uuid" form:"uuid" json:"uuid" xml:"uuid"`
+	Total       int32  `json:"total" xml:"total"`
+	Item        `json:"item" xml:"item"`
+	DisplayUser `json:"user" xml:"user"`
 }
 
 type FindCartByUuid struct {
@@ -17,21 +18,20 @@ type FindCartByUuid struct {
 }
 
 type NewCart struct {
-	Name   string `json:"name" xml:"name" validate:"required,alphanum"`
 	Total  int32  `json:"total" xml:"total" validate:"required,numeric"`
 	ItemId string `json:"itemId" xml:"itemId" validate:"required"`
 }
 
-func CreateCart(db *src.DB, cart NewCart) (uuid.UUID, error) {
+func CreateCart(db *src.DB, cart NewCart, user User) (uuid.UUID, error) {
 	uuid := uuid.New()
-	stmt, err := db.Prepare("INSERT INTO carts (uuid, total, item_id) VALUES (?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO carts (uuid, total, item_id, user_id) VALUES (?, ?, ?, ?)")
 	defer stmt.Close()
 
 	if err != nil {
 		return uuid, err
 	}
 
-	_, err = stmt.Exec(uuid, cart.Total, cart.ItemId)
+	_, err = stmt.Exec(uuid, cart.Total, cart.ItemId, user.Uuid)
 
 	if err != nil {
 		return uuid, err
@@ -40,31 +40,73 @@ func CreateCart(db *src.DB, cart NewCart) (uuid.UUID, error) {
 	return uuid, nil
 }
 
-func FetchCarts(db *src.DB) ([]Item, error) {
-	var items []Item
-	stmt, err := db.Prepare("SELECT * FROM items")
+func FetchCartsByUuid(db *src.DB, uuid string, user User) (Cart, error) {
+	var carts Cart
+	stmt, err := db.Prepare(`
+		SELECT 
+			carts.uuid, carts.total, 
+			items.uuid as items_uuid, items.name, items.price, 
+			categories.uuid, categories.name
+		FROM carts
+		INNER JOIN items ON carts.item_id = items.uuid
+		INNER JOIN categories ON items.category_id = categories.uuid
+		WHERE carts.uuid = ? AND carts.user_id = ?
+		`)
 	if err != nil {
-		return items, err
+		return carts, err
 	}
 
-	query, err := stmt.Query()
+	query := stmt.QueryRow(uuid, user.Uuid)
+
+	if err := query.Scan(&carts.Uuid, &carts.Total, &carts.Item.Uuid, &carts.Item.Name, &carts.Item.Price, &carts.Item.Category.Uuid, &carts.Item.Category.Name); err != nil {
+		return carts, err
+	}
+	carts.DisplayUser.Uuid = user.Uuid
+	carts.DisplayUser.Username = user.Username
+	if err := query.Err(); err != nil {
+		return carts, err
+	}
+
+	return carts, err
+}
+
+func FetchCarts(db *src.DB, user User) ([]Cart, error) {
+	var carts []Cart
+	stmt, err := db.Prepare(`
+		SELECT 
+			carts.uuid, carts.total, 
+			items.uuid as items_uuid, items.name, items.price, 
+			categories.uuid, categories.name
+		FROM carts
+		INNER JOIN items ON carts.item_id = items.uuid
+		INNER JOIN categories ON items.category_id = categories.uuid
+		WHERE carts.user_id = ?
+		`)
 	if err != nil {
-		return items, err
+		return carts, err
+	}
+
+	query, err := stmt.Query(user.Uuid)
+	if err != nil {
+		return carts, err
 	}
 	defer query.Close()
 
 	for query.Next() {
-		var item Item
-		if err := query.Scan(&item.Uuid, &item.Name); err != nil {
-			return items, err
+		var cart Cart
+
+		cart.DisplayUser.Uuid = user.Uuid
+		cart.DisplayUser.Username = user.Username
+		if err := query.Scan(&cart.Uuid, &cart.Total, &cart.Item.Uuid, &cart.Item.Name, &cart.Item.Price, &cart.Category.Uuid, &cart.Category.Name); err != nil {
+			return carts, err
 		}
-		items = append(items, item)
+		carts = append(carts, cart)
 
 	}
 
 	if err := query.Err(); err != nil {
-		return items, err
+		return carts, err
 	}
 
-	return items, err
+	return carts, err
 }
