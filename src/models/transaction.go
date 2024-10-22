@@ -18,11 +18,10 @@ type FindTransactionByUuid struct {
 }
 
 type NewTransaction struct {
-	Pay     int32  `json:"price" xml:"price" validate:"required,numeric"`
 	PayType string `json:"payType" xml:"payType" validate:"required,alphanum"`
 }
 
-func CreateTransaction(db *src.DB, item NewTransaction, user User) (uuid.UUID, error) {
+func CreateTransaction(db *src.DB, item NewTransaction, userCarts []Cart, user User) (uuid.UUID, error) {
 	uuid := uuid.New()
 	stmt, err := db.Prepare("INSERT INTO transactions (uuid, pay, pay_type, consumer_id) VALUES (?, ?, ?, ?)")
 	defer stmt.Close()
@@ -31,7 +30,12 @@ func CreateTransaction(db *src.DB, item NewTransaction, user User) (uuid.UUID, e
 		return uuid, err
 	}
 
-	_, err = stmt.Exec(uuid, item.Pay, item.PayType, user.Uuid)
+	total := 0
+	for _, cart := range userCarts {
+		total += int(cart.Price)
+	}
+
+	_, err = stmt.Exec(uuid, total, item.PayType, user.Uuid)
 
 	if err != nil {
 		return uuid, err
@@ -45,7 +49,7 @@ func FetchTransactionByUuid(db *src.DB, uuid string, user User) (Transaction, er
 	stmt, err := db.Prepare(`
 		SELECT transactions.uuid, transactions.pay, transactions.pay_type
 		FROM transactions 
-		WHERE transactions.consumer_id = ? AND transactions.uuid = ? LIMIT 1`,
+		WHERE transactions.uuid = ? AND transactions.consumer_id = ? LIMIT 1`,
 	)
 	if err != nil {
 		return item, err

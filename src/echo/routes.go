@@ -327,7 +327,25 @@ func RegisterRouter(server *Server) {
 			})
 		}
 
-		uuid, err := models.CreateTransaction(&server.Db, newTrans, user)
+		carts, err := models.FetchCarts(&server.Db, user)
+		if err != nil {
+			log.Error(err.Error())
+
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"message": "Database error",
+				"status":  "fail",
+			})
+		} else if carts == nil {
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Empty carts",
+				"status":  "fail",
+			})
+		}
+		err = models.CleanCarts(&server.Db, user)
+		if err != nil {
+			log.Error(err.Error())
+		}
+		uuid, err := models.CreateTransaction(&server.Db, newTrans, carts, user)
 
 		if err != nil {
 			log.Error(err.Error())

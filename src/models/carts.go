@@ -24,7 +24,7 @@ type NewCart struct {
 
 func CreateCart(db *src.DB, cart NewCart, user User) (uuid.UUID, error) {
 	uuid := uuid.New()
-	stmt, err := db.Prepare("INSERT INTO carts (uuid, total, item_id, user_id) VALUES (?, ?, ?, ?)")
+	stmt, err := db.Prepare("insert into carts (uuid, total, item_id, user_id) values (?, ?, ?, ?)")
 	defer stmt.Close()
 
 	if err != nil {
@@ -38,6 +38,19 @@ func CreateCart(db *src.DB, cart NewCart, user User) (uuid.UUID, error) {
 	}
 
 	return uuid, nil
+}
+
+func CleanCarts(db *src.DB, user User) error {
+	stmt, err := db.Prepare("DELETE FROM carts WHERE carts.user_id = ?")
+	defer stmt.Close()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(user.Uuid)
+
+	return err
 }
 
 func FetchCartsByUuid(db *src.DB, uuid string, user User) (Cart, error) {
