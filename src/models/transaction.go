@@ -13,6 +13,12 @@ type Transaction struct {
 	DisplayUser `json:"displayuser"`
 }
 
+type DetailTransaction struct {
+	Transaction     `json:"transaction"`
+	DisplayUser     `json:"displayuser"`
+	TransactionItem []TransactionItem `json:"transactionItem"`
+}
+
 type FindTransactionByUuid struct {
 	Uuid string `param:"uuid" query:"uuid" form:"uuid" json:"uuid" xml:"uuid" validate:"required"`
 }

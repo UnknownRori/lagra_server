@@ -368,6 +368,16 @@ func RegisterRouter(server *Server) {
 			})
 		}
 
+		err = models.CreateTransactionItemsFromCarts(&server.Db, transaction, carts)
+		if err != nil {
+			log.Error(err.Error())
+
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"message": "Invalid state",
+				"status":  "fail",
+			})
+		}
+
 		return c.JSON(http.StatusOK, echo.Map{
 			"data": echo.Map{
 				"transaction": transaction,
