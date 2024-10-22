@@ -385,4 +385,27 @@ func RegisterRouter(server *Server) {
 			"status": "success",
 		})
 	})
+
+	authenticatedOnly.GET("transactions/:uuid", func(c echo.Context) error {
+		transactionUuid := c.Param("uuid")
+		cc := c.(*AuthenticatedContext)
+		user := cc.User
+
+		transaction, err := models.FetchDetailTransactions(&server.Db, transactionUuid, user)
+
+		if err != nil {
+			log.Error(err.Error())
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Invalid request",
+				"status":  "fail",
+			})
+		}
+
+		return c.JSON(http.StatusOK, echo.Map{
+			"data": echo.Map{
+				"transaction": transaction,
+			},
+			"status": "success",
+		})
+	})
 }

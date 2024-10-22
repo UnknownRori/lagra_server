@@ -16,6 +16,12 @@ type TransactionItem struct {
 	Item        `json:"item"`
 }
 
+type TransactionDisplayItem struct {
+	Uuid  string `param:"uuid" query:"uuid" form:"uuid" json:"uuid" xml:"uuid"`
+	Total string `json:"total" xml:"total"`
+	Item  `json:"item"`
+}
+
 func CreateTransactionItemsFromCarts(db *src.DB, transaction Transaction, userCarts []Cart) error {
 	valString := []string{}
 	valArgs := []interface{}{}
@@ -47,7 +53,7 @@ func CreateTransactionItemsFromCarts(db *src.DB, transaction Transaction, userCa
 }
 
 func FetchDetailTransactions(db *src.DB, uuid string, user User) (DetailTransaction, error) {
-	var items []TransactionItem
+	var items []TransactionDisplayItem
 	var detail DetailTransaction
 	transaction, err := FetchTransactionByUuid(db, uuid, user)
 	detail.Transaction = transaction
@@ -58,13 +64,13 @@ func FetchDetailTransactions(db *src.DB, uuid string, user User) (DetailTransact
 
 	stmt, err := db.Prepare(`
 		SELECT 
-			transaction_item.uuid, transaction_item.total
-			items.uuid, items.name, items.price, category.uuid, category.name
+			transaction_item.uuid, transaction_item.total,
+			items.uuid, items.name, items.price, categories.uuid, categories.name
 		FROM transaction_item
 		INNER JOIN
 			items ON items.uuid = transaction_item.item_id
 		INNER JOIN
-			category ON items.category_id = categories.item_id
+			categories ON items.category_id = categories.uuid
 		WHERE transaction_item.transaction_id = ?`,
 	)
 	if err != nil {
@@ -78,7 +84,7 @@ func FetchDetailTransactions(db *src.DB, uuid string, user User) (DetailTransact
 	defer query.Close()
 
 	for query.Next() {
-		var item TransactionItem
+		var item TransactionDisplayItem
 		if err := query.Scan(&item.Uuid, &item.Total, &item.Item.Uuid, &item.Item.Name,
 			&item.Item.Price, &item.Category.Uuid, &item.Category.Name); err != nil {
 			return detail, err
@@ -92,6 +98,6 @@ func FetchDetailTransactions(db *src.DB, uuid string, user User) (DetailTransact
 		return detail, err
 	}
 
-	detail.TransactionItem = items
+	detail.TransactionDisplayItem = items
 	return detail, err
 }

@@ -14,9 +14,8 @@ type Transaction struct {
 }
 
 type DetailTransaction struct {
-	Transaction     `json:"transaction"`
-	DisplayUser     `json:"displayuser"`
-	TransactionItem []TransactionItem `json:"transactionItem"`
+	Transaction            `json:"transaction"`
+	TransactionDisplayItem []TransactionDisplayItem `json:"transactionItem"`
 }
 
 type FindTransactionByUuid struct {
