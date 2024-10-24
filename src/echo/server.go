@@ -21,9 +21,10 @@ import (
 )
 
 type Server struct {
-	App       *echo.Echo
-	Db        src.DB
-	ConfigJwt echoJwt.Config
+	App            *echo.Echo
+	Db             src.DB
+	StorageService *StorageService
+	ConfigJwt      echoJwt.Config
 }
 
 var (
@@ -37,6 +38,8 @@ func CreateServer() Server {
 	if err != nil {
 		panic("Database Connection failed : \n" + err.Error())
 	}
+
+	storage := NewStorageService("storage")
 
 	e := echo.New()
 	e.HidePort = true
@@ -60,9 +63,10 @@ func CreateServer() Server {
 		}
 
 	s := Server{
-		App:       e,
-		Db:        db,
-		ConfigJwt: configJwt,
+		App:            e,
+		Db:             db,
+		ConfigJwt:      configJwt,
+		StorageService: storage,
 	}
 
 	RegisterRouter(&s)

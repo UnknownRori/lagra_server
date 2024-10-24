@@ -1,7 +1,9 @@
 package echo
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/UnknownRori/lagra_server/src/models"
 
@@ -19,6 +21,14 @@ func RegisterRouter(server *Server) {
 			AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 		}),
 	)
+
+	server.App.GET("/storage/:filename", func(c echo.Context) error {
+		filename := c.Param("filename")
+		filePath := server.StorageService.path + "/" + filename
+		strings.ReplaceAll(filePath, "..", "")
+
+		return c.File(filePath)
+	})
 
 	v1 := api.Group("/v1")
 
@@ -175,6 +185,28 @@ func RegisterRouter(server *Server) {
 				"status":  "fail",
 			})
 		}
+
+		file, err := c.FormFile("img")
+		if err != nil {
+			log.Error(err.Error())
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Must be a file",
+				"status":  "fail",
+			})
+		}
+
+		filename, err := server.StorageService.store(file)
+		if err != nil {
+			log.Error(err.Error())
+
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"message": "File failed to save",
+				"status":  "fail",
+			})
+		}
+
+		item.ImgUrl = filename
+		fmt.Println(item.CategoryId)
 
 		uuid, err := models.CreateItem(&server.Db, item)
 
