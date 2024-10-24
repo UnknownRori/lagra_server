@@ -65,7 +65,7 @@ func FetchDetailTransactions(db *src.DB, uuid string, user User) (DetailTransact
 	stmt, err := db.Prepare(`
 		SELECT 
 			transaction_item.uuid, transaction_item.total,
-			items.uuid, items.name, items.price, categories.uuid, categories.name
+			items.uuid, items.name, items.price, items.img_url, categories.uuid, categories.name
 		FROM transaction_item
 		INNER JOIN
 			items ON items.uuid = transaction_item.item_id
@@ -86,7 +86,7 @@ func FetchDetailTransactions(db *src.DB, uuid string, user User) (DetailTransact
 	for query.Next() {
 		var item TransactionDisplayItem
 		if err := query.Scan(&item.Uuid, &item.Total, &item.Item.Uuid, &item.Item.Name,
-			&item.Item.Price, &item.Category.Uuid, &item.Category.Name); err != nil {
+			&item.Item.Price, &item.Item.ImgUrl, &item.Category.Uuid, &item.Category.Name); err != nil {
 			return detail, err
 		}
 

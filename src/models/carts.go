@@ -58,7 +58,7 @@ func FetchCartsByUuid(db *src.DB, uuid string, user User) (Cart, error) {
 	stmt, err := db.Prepare(`
 		SELECT 
 			carts.uuid, carts.total, 
-			items.uuid as items_uuid, items.name, items.price, 
+			items.uuid as items_uuid, items.name, items.price, items.img_url
 			categories.uuid, categories.name
 		FROM carts
 		INNER JOIN items ON carts.item_id = items.uuid
@@ -71,7 +71,7 @@ func FetchCartsByUuid(db *src.DB, uuid string, user User) (Cart, error) {
 
 	query := stmt.QueryRow(uuid, user.Uuid)
 
-	if err := query.Scan(&carts.Uuid, &carts.Total, &carts.Item.Uuid, &carts.Item.Name, &carts.Item.Price, &carts.Item.Category.Uuid, &carts.Item.Category.Name); err != nil {
+	if err := query.Scan(&carts.Uuid, &carts.Total, &carts.Item.Uuid, &carts.Item.Name, &carts.Item.Price, &carts.Item.ImgUrl, &carts.Item.Category.Uuid, &carts.Item.Category.Name); err != nil {
 		return carts, err
 	}
 	carts.DisplayUser.Uuid = user.Uuid
@@ -88,7 +88,7 @@ func FetchCarts(db *src.DB, user User) ([]Cart, error) {
 	stmt, err := db.Prepare(`
 		SELECT 
 			carts.uuid, carts.total, 
-			items.uuid as items_uuid, items.name, items.price, 
+			items.uuid as items_uuid, items.name, items.price, items.img_url,
 			categories.uuid, categories.name
 		FROM carts
 		INNER JOIN items ON carts.item_id = items.uuid
@@ -110,7 +110,7 @@ func FetchCarts(db *src.DB, user User) ([]Cart, error) {
 
 		cart.DisplayUser.Uuid = user.Uuid
 		cart.DisplayUser.Username = user.Username
-		if err := query.Scan(&cart.Uuid, &cart.Total, &cart.Item.Uuid, &cart.Item.Name, &cart.Item.Price, &cart.Category.Uuid, &cart.Category.Name); err != nil {
+		if err := query.Scan(&cart.Uuid, &cart.Total, &cart.Item.Uuid, &cart.Item.Name, &cart.Item.Price, &cart.Item.ImgUrl, &cart.Category.Uuid, &cart.Category.Name); err != nil {
 			return carts, err
 		}
 		carts = append(carts, cart)
