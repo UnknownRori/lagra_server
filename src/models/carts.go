@@ -58,7 +58,7 @@ func FetchCartsByUuid(db *src.DB, uuid string, user User) (Cart, error) {
 	stmt, err := db.Prepare(`
 		SELECT 
 			carts.uuid, carts.total, 
-			items.uuid as items_uuid, items.name, items.price, items.img_url
+			items.uuid as items_uuid, items.name, items.price, items.img_url,
 			categories.uuid, categories.name
 		FROM carts
 		INNER JOIN items ON carts.item_id = items.uuid
