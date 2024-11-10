@@ -3,8 +3,8 @@ CREATE TABLE transaction_item (
     total INT NOT NULL,
 
     item_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY(item_id) REFERENCES items(uuid),
+    FOREIGN KEY(item_id) REFERENCES items(uuid) ON DELETE CASCADE,
 
     transaction_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY(transaction_id) REFERENCES transactions(uuid)
+    FOREIGN KEY(transaction_id) REFERENCES transactions(uuid) ON DELETE CASCADE
 );

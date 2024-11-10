@@ -3,7 +3,7 @@ CREATE TABLE carts (
     total INT NOT NULL,
 
     user_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY(user_id) REFERENCES users(uuid),
+    FOREIGN KEY(user_id) REFERENCES users(uuid) ON DELETE CASCADE,
     item_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY(item_id) REFERENCES items(uuid)
+    FOREIGN KEY(item_id) REFERENCES items(uuid) ON DELETE CASCADE
 );

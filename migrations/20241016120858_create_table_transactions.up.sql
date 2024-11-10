@@ -4,5 +4,5 @@ CREATE TABLE transactions (
     pay_type ENUM("CREDIT", "PAYPAL", "GOPAY") NOT NULL,
 
     consumer_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY(consumer_id) REFERENCES users(uuid)
+    FOREIGN KEY(consumer_id) REFERENCES users(uuid) ON DELETE CASCADE
 );

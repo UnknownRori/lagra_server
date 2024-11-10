@@ -5,5 +5,5 @@ CREATE TABLE items (
     img_url VARCHAR(255) NOT NULL,
 
     category_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY(category_id) REFERENCES categories(uuid)
+    FOREIGN KEY(category_id) REFERENCES categories(uuid) ON DELETE CASCADE
 );
