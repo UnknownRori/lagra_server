@@ -14,7 +14,7 @@ type Transaction struct {
 }
 
 type DetailTransaction struct {
-	Transaction            `json:"transaction"`
+	Transaction            
 	TransactionDisplayItem []TransactionDisplayItem `json:"transactionItem"`
 }
 
