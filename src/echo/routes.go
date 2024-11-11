@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/UnknownRori/lagra_server/src"
 	"github.com/UnknownRori/lagra_server/src/models"
 
 	"github.com/charmbracelet/log"
@@ -90,6 +91,13 @@ func RegisterRouter(server *Server) {
 
 			return c.JSON(http.StatusNotFound, echo.Map{
 				"message": "Data not found!",
+				"status":  "fail",
+			})
+		}
+
+		if !src.VerifyHash([]byte(user.Password), []byte(fetchUser.Password)) {
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Username or Password incorrect",
 				"status":  "fail",
 			})
 		}
