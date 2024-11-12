@@ -72,6 +72,53 @@ func RegisterRouter(server *Server) {
 		})
 	})
 
+	v1.POST("/auth/admin-login", func(c echo.Context) error {
+		var user models.LoginUser
+		err := c.Bind(&user)
+
+		if err != nil {
+			log.Error(err.Error())
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Username, Password, and displayName should be filled!",
+				"status":  "fail",
+			})
+		}
+
+		fetchUser, err := models.FetchUserByUsername(&server.Db, user.Username)
+
+		if err != nil {
+			log.Error(err.Error())
+
+			return c.JSON(http.StatusNotFound, echo.Map{
+				"message": "Data not found!",
+				"status":  "fail",
+			})
+		}
+
+		if fetchUser.Role != "ADMIN" {
+			return c.JSON(http.StatusNotFound, echo.Map{
+				"message": "Not an admin!",
+				"status":  "fail",
+			})
+		}
+
+		if !src.VerifyHash([]byte(user.Password), []byte(fetchUser.Password)) {
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "Username or Password incorrect",
+				"status":  "fail",
+			})
+		}
+
+		token, err := CreateClaim(fetchUser.Uuid)
+
+		return c.JSON(http.StatusOK, echo.Map{
+			"data": echo.Map{
+				"token": token,
+			},
+			"status": "success",
+		})
+	})
+
 	v1.POST("/auth/login", func(c echo.Context) error {
 		var user models.LoginUser
 		err := c.Bind(&user)
